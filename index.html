@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonim Dert Paylaş</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+    .form-container, .dert { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    input, textarea, button { width: 100%; margin-top: 10px; padding: 10px; font-size: 1em; }
+    button { background: #6c63ff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #574fd6; }
+    .yorumlar { margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px; }
+    .yorum { background: #f9f9f9; padding: 5px; margin-top: 5px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<h1>Anonim Dert Paylaş</h1>
+
+<div class="form-container">
+  <input type="text" id="baslik" placeholder="Yorum Başlığı">
+  <textarea id="icerik" rows="4" placeholder="Yorumunuzu yazın..."></textarea>
+  <button onclick="dertEkle()">Paylaş</button>
+</div>
+
+<div id="dertListesi"></div>
+
+<script>
+  // Sayfa yüklendiğinde localStorage'dan dertleri yükle
+  let dertler = JSON.parse(localStorage.getItem('dertler')) || [];
+
+  function dertEkle() {
+    const baslik = document.getElementById("baslik").value.trim();
+    const icerik = document.getElementById("icerik").value.trim();
+
+    if (!baslik || !icerik) {
+      alert("Lütfen başlık ve içerik giriniz.");
+      return;
+    }
+
+    const yeniDert = {
+      baslik: baslik,
+      icerik: icerik,
+      yorumlar: []
+    };
+
+    dertler.unshift(yeniDert);
+    localStorage.setItem('dertler', JSON.stringify(dertler));
+    guncelle();
+    temizle();
+  }
+
+  function yorumEkle(index) {
+    const yorumInput = document.getElementById(`yorumInput-${index}`);
+    const yorum = yorumInput.value.trim();
+
+    if (!yorum) return;
+
+    dertler[index].yorumlar.push(yorum);
+    localStorage.setItem('dertler', JSON.stringify(dertler));
+    guncelle();
+    yorumInput.value = "";
+  }
+
+  function guncelle() {
+    const liste = document.getElementById("dertListesi");
+    liste.innerHTML = "";
+
+    dertler.forEach((dert, index) => {
+      const div = document.createElement("div");
+      div.className = "dert";
+      div.innerHTML = `
+        <h3>${dert.baslik}</h3>
+        <p>${dert.icerik}</p>
+        <div class="yorumlar">
+          <strong>Yorumlar:</strong>
+          ${dert.yorumlar.map(y => `<div class="yorum">${y}</div>`).join("")}
+          <input id="yorumInput-${index}" placeholder="Yorum yaz...">
+          <button onclick="yorumEkle(${index})">Ekle</button>
+        </div>
+      `;
+      liste.appendChild(div);
+    });
+  }
+
+  function temizle() {
+    document.getElementById("baslik").value = "";
+    document.getElementById("icerik").value = "";
+  }
+
+  // Sayfa yüklendiğinde dertleri göster
+  guncelle();
+</script>
+
+</body>
+</html>
