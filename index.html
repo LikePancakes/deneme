@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Anonim Yorum Paylaş</title>
+  <title>Anonim Dert Paylaş</title>
   <style>
     body { font-family: Arial; padding: 20px; background: #f0f0f0; }
     .form-container, .dert { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
@@ -15,7 +15,7 @@
 </head>
 <body>
 
-<h1>Anonim Yorum Paylaş</h1>
+<h1>Anonim Dert Paylaş</h1>
 
 <div class="form-container">
   <input type="text" id="baslik" placeholder="Yorum Başlığı">
@@ -26,10 +26,22 @@
 <div id="dertListesi"></div>
 
 <script>
-  // Sayfa yüklendiğinde localStorage'dan dertleri yükle
-  let dertler = JSON.parse(localStorage.getItem('dertler')) || [];
+  // Sayfa yüklendiğinde dertleri getir
+  window.onload = function() {
+    verileriGetir();
+  };
 
-  function dertEkle() {
+  async function verileriGetir() {
+    try {
+      const response = await fetch('api.php?action=get_dertler');
+      const dertler = await response.json();
+      guncelle(dertler);
+    } catch (error) {
+      console.error('Hata:', error);
+    }
+  }
+
+  async function dertEkle() {
     const baslik = document.getElementById("baslik").value.trim();
     const icerik = document.getElementById("icerik").value.trim();
 
@@ -38,31 +50,59 @@
       return;
     }
 
-    const yeniDert = {
-      baslik: baslik,
-      icerik: icerik,
-      yorumlar: []
-    };
-
-    dertler.unshift(yeniDert);
-    localStorage.setItem('dertler', JSON.stringify(dertler));
-    guncelle();
-    temizle();
+    try {
+      const response = await fetch('api.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'add_dert',
+          baslik: baslik,
+          icerik: icerik
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        verileriGetir();
+        temizle();
+      }
+    } catch (error) {
+      console.error('Hata:', error);
+    }
   }
 
-  function yorumEkle(index) {
+  async function yorumEkle(dertId, index) {
     const yorumInput = document.getElementById(`yorumInput-${index}`);
     const yorum = yorumInput.value.trim();
 
     if (!yorum) return;
 
-    dertler[index].yorumlar.push(yorum);
-    localStorage.setItem('dertler', JSON.stringify(dertler));
-    guncelle();
-    yorumInput.value = "";
+    try {
+      const response = await fetch('api.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'add_yorum',
+          dert_id: dertId,
+          yorum: yorum
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        verileriGetir();
+        yorumInput.value = "";
+      }
+    } catch (error) {
+      console.error('Hata:', error);
+    }
   }
 
-  function guncelle() {
+  function guncelle(dertler) {
     const liste = document.getElementById("dertListesi");
     liste.innerHTML = "";
 
@@ -74,9 +114,9 @@
         <p>${dert.icerik}</p>
         <div class="yorumlar">
           <strong>Yorumlar:</strong>
-          ${dert.yorumlar.map(y => `<div class="yorum">${y}</div>`).join("")}
+          ${dert.yorumlar ? dert.yorumlar.map(y => `<div class="yorum">${y.yorum}</div>`).join("") : ''}
           <input id="yorumInput-${index}" placeholder="Yorum yaz...">
-          <button onclick="yorumEkle(${index})">Ekle</button>
+          <button onclick="yorumEkle(${dert.id}, ${index})">Ekle</button>
         </div>
       `;
       liste.appendChild(div);
@@ -87,9 +127,6 @@
     document.getElementById("baslik").value = "";
     document.getElementById("icerik").value = "";
   }
-
-  // Sayfa yüklendiğinde dertleri göster
-  guncelle();
 </script>
 
 </body>
