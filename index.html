@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonim Konuşma</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    .form-container, .dert, .yorum {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    button {
+      background-color: #6c63ff;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #574fd6;
+    }
+    .yorumlar {
+      margin-top: 10px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+    .yorum {
+      background-color: #f9f9f9;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Anonim Yorum Paylaş</h1>
+
+  <div class="form-container">
+    <input type="text" id="baslik" placeholder="Yorum Başlığı">
+    <textarea id="icerik" rows="4" placeholder="Yorumunuzu yazın..."></textarea>
+    <button onclick="dertEkle()">Paylaş</button>
+  </div>
+
+  <div id="dertListesi"></div>
+
+  <script>
+    // Başlangıçta localStorage'dan veri çek
+    let dertListesi = JSON.parse(localStorage.getItem("dertler")) || [];
+
+    function dertEkle() {
+      const baslik = document.getElementById("baslik").value.trim();
+      const icerik = document.getElementById("icerik").value.trim();
+
+      if (!baslik || !icerik) {
+        alert("Lütfen başlık ve içerik doldur!");
+        return;
+      }
+
+      const yeniDert = {
+        baslik: baslik,
+        icerik: icerik,
+        yorumlar: []
+      };
+
+      dertListesi.unshift(yeniDert);
+      kaydet();
+      temizleForm();
+      dertleriGoster();
+    }
+
+    function yorumEkle(index) {
+      const yorumInput = document.getElementById(`yorumInput-${index}`);
+      const yorum = yorumInput.value.trim();
+      if (!yorum) return;
+
+      dertListesi[index].yorumlar.push(yorum);
+      kaydet();
+      dertleriGoster();
+    }
+
+    function dertleriGoster() {
+      const container = document.getElementById("dertListesi");
+      container.innerHTML = "";
+
+      dertListesi.forEach((dert, index) => {
+        const dertDiv = document.createElement("div");
+        dertDiv.className = "dert";
+
+        dertDiv.innerHTML = `
+          <h3>${dert.baslik}</h3>
+          <p>${dert.icerik}</p>
+          <div class="yorumlar">
+            <strong>Yorumlar:</strong>
+            ${dert.yorumlar.map(y => `<div class="yorum">${y}</div>`).join("")}
+            <input id="yorumInput-${index}" placeholder="Tavsiyeni yaz..." />
+            <button onclick="yorumEkle(${index})">Ekle</button>
+          </div>
+        `;
+
+        container.appendChild(dertDiv);
+      });
+    }
+
+    function kaydet() {
+      localStorage.setItem("dertler", JSON.stringify(dertListesi));
+    }
+
+    function temizleForm() {
+      document.getElementById("baslik").value = "";
+      document.getElementById("icerik").value = "";
+    }
+
+    // Sayfa yüklendiğinde göster
+    dertleriGoster();
+  </script>
+
+</body>
+</html>
