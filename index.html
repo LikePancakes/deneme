@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Anonim Messenger</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+    #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; background: white; padding: 10px; }
+    input, button { padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Anonim Messenger</h2>
+  <div id="messages"></div>
+  <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." />
+  <button onclick="sendMessage()">Gönder</button>
+
+  <script>
+    // 🔒 Firebase config (burayı kendi config'inle değiştir!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDV5F2hTvDh1wPId7wLB19nz2kv4QUJSSQ",
+      authDomain: "ssanonim-b9b60.firebaseapp.com",
+      databaseURL: "https://ssanonim-b9b60-default-rtdb.firebaseio.com/",
+      projectId: "ssanonim-b9b60",
+      storageBucket: "ssanonim-b9b60.firebasestorage.app",
+      messagingSenderId: "464233019477",
+      appId: "1:464233019477:web:1272c9ef384986a36d3cdc"
+    };
+
+    // Firebase başlat
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const messagesDiv = document.getElementById("messages");
+
+    function sendMessage() {
+      const input = document.getElementById("messageInput");
+      const msg = input.value.trim();
+      if (msg !== "") {
+        db.ref("messages").push({
+          text: msg,
+          timestamp: Date.now()
+        });
+        input.value = "";
+      }
+    }
+
+    // Mesajları canlı olarak dinle
+    db.ref("messages").on("child_added", snapshot => {
+      const message = snapshot.val();
+      const p = document.createElement("p");
+      p.textContent = message.text;
+      messagesDiv.appendChild(p);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  </script>
+</body>
+</html>
